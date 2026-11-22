@@ -1374,13 +1374,16 @@ dialog::backdrop {
 /* Floating Quick-Support Button & Top-Layer Popover */
 .support-fab {
   position: fixed;
-  inset-block-end: clamp(1rem, 3vw, 1.75rem);
-  inset-inline-end: clamp(1rem, 3vw, 1.75rem);
-  z-index: 40;
+  right: 1rem;
+  bottom: 1rem;
+  right: calc(clamp(1rem, 3vw, 1.75rem) + env(safe-area-inset-right, 0px));
+  bottom: calc(clamp(1rem, 3vw, 1.75rem) + env(safe-area-inset-bottom, 0px));
+  z-index: 90;
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  padding: 0.8rem 1.15rem;
+  min-block-size: 2.75rem;
+  padding: 0.75rem 1.15rem;
   border: 1px solid var(--accent);
   background-color: var(--bg-elevated);
   color: var(--fg);
@@ -1523,10 +1526,12 @@ dialog::backdrop {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+  flex: 1 1 auto;
   padding: 1rem;
   min-block-size: 10rem;
-  max-block-size: 15rem;
+  max-block-size: 16rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
   background-color: var(--bg);
 }
 
@@ -1592,24 +1597,25 @@ dialog::backdrop {
 }
 
 .support-dm-input-wrap textarea {
-  padding: 0.55rem 0.75rem;
-  font-size: 0.86rem;
-  border-radius: 1rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 1rem;
+  line-height: 1.4;
+  border-radius: 1.15rem;
   resize: none;
-  min-block-size: 2.35rem;
-  max-block-size: 5.5rem;
+  min-block-size: 2.6rem;
+  max-block-size: 6rem;
 }
 
 .support-dm-form .error-msg {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   margin-block-start: 0.2rem;
 }
 
 .support-send-btn {
   display: grid;
   place-items: center;
-  inline-size: 2.35rem;
-  block-size: 2.35rem;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
   border: 0;
   border-radius: 999px;
   background-color: var(--accent);
@@ -1626,6 +1632,32 @@ dialog::backdrop {
 .support-send-btn:disabled {
   opacity: 0.5;
   cursor: wait;
+}
+
+@media (max-width: 36rem) {
+  .support-popover {
+    inset-inline: 0.5rem;
+    inset-block-end: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+    inline-size: auto;
+    block-size: min(32rem, calc(100dvb - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+    max-block-size: calc(100dvb - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    border-radius: 0.9rem;
+  }
+
+  .support-thread {
+    min-block-size: 0;
+    max-block-size: none;
+  }
+
+  .support-close-btn {
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+  }
+
+  .support-send-btn {
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+  }
 }
 
 /* Reduced-motion safe baseline for scroll reveals */
