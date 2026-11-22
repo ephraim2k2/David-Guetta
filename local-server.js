@@ -64,18 +64,12 @@ const server = http.createServer(async (req, res) => {
     return res.end('Method Not Allowed');
   }
 
+  const publicDir = path.join(__dirname, 'public');
   const safeRel = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
-  const filePath = path.resolve(__dirname, safeRel);
-  const baseName = path.basename(filePath);
+  const filePath = path.resolve(publicDir, safeRel);
 
-  // Prevent directory traversal and never expose server/config/private files
-  if (
-    !filePath.startsWith(__dirname + path.sep) ||
-    baseName.startsWith('.env') ||
-    baseName === 'server.js' ||
-    baseName === 'package.json' ||
-    filePath.startsWith(path.join(__dirname, 'lib') + path.sep)
-  ) {
+  // Prevent directory traversal outside public/
+  if (!filePath.startsWith(publicDir + path.sep)) {
     res.writeHead(403);
     return res.end('Forbidden');
   }

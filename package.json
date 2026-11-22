@@ -4,7 +4,7 @@
   "private": true,
   "description": "David Guetta Official Management & Global Representation",
   "scripts": {
-    "start": "node server.js"
+    "dev": "node local-server.js"
   },
   "engines": {
     "node": ">=18"
