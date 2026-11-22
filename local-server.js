@@ -68,7 +68,7 @@ const server = http.createServer(async (req, res) => {
   const safeRel = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
   const filePath = path.resolve(publicDir, safeRel);
 
-  // Prevent directory traversal outside public/
+  // Prevent directory traversal
   if (!filePath.startsWith(publicDir + path.sep)) {
     res.writeHead(403);
     return res.end('Forbidden');
