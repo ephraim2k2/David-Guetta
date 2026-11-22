@@ -291,10 +291,9 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 5. Visitor Notification Beacon (once per browser session, rich telemetry)
+  // 5. Visitor Notification (once per session once relayed, rich telemetry)
   // ---------------------------------------------------------------------------
   if (!sessionStorage.getItem('dg_visit_notified')) {
-    sessionStorage.setItem('dg_visit_notified', '1');
     const params = new URLSearchParams(window.location.search);
     const utms = ['utm_source', 'utm_medium', 'utm_campaign']
       .map((k) => (params.get(k) ? `${k.replace('utm_', '')}=${params.get(k)}` : null))
@@ -316,17 +315,19 @@
       connection: navigator.connection?.effectiveType || 'Unknown'
     });
 
-    if (navigator.sendBeacon) {
-      const blob = new Blob([visitPayload], { type: 'application/json' });
-      navigator.sendBeacon('/api/visit', blob);
-    } else {
-      fetch('/api/visit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: visitPayload,
-        keepalive: true
-      }).catch(() => {});
-    }
+    fetch('/api/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: visitPayload,
+      keepalive: true
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.relayed) {
+          sessionStorage.setItem('dg_visit_notified', '1');
+        }
+      })
+      .catch(() => {});
   }
 
   // ---------------------------------------------------------------------------
