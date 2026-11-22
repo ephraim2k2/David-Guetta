@@ -890,5 +890,91 @@
       <button type="submit" value="close" class="btn btn-outline">Close</button>
     </form>
   </dialog>
+
+  <!-- Floating Quick-Support Popover -->
+  <button
+    type="button"
+    id="support-fab"
+    class="support-fab"
+    commandfor="support-popover"
+    command="toggle-popover"
+    aria-label="Open quick support chat"
+  >
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+    <span>Support</span>
+  </button>
+
+  <div id="support-popover" popover class="support-popover" aria-labelledby="support-popover-title">
+    <div class="support-popover-header">
+      <div class="support-dm-identity">
+        <span class="support-avatar" aria-hidden="true">
+          DG
+          <span class="support-online-dot"></span>
+        </span>
+        <div>
+          <h2 id="support-popover-title">Support Desk</h2>
+          <p class="support-dm-status">Online · Quick response</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        id="support-close-btn"
+        class="dialog-close-btn support-close-btn"
+        commandfor="support-popover"
+        command="hide-popover"
+        aria-label="Close quick support"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div id="support-thread" class="support-thread" aria-live="polite" aria-label="Support conversation">
+      <div class="dm-bubble dm-bubble-in">
+        <p>Hi — text us here and our team will reply right in this chat.</p>
+        <span class="dm-time">Support Desk</span>
+      </div>
+    </div>
+
+    <form id="support-form" class="support-dm-form" novalidate>
+      <div class="support-dm-composer">
+        <div class="field support-dm-input-wrap">
+          <label for="support-message" class="visually-hidden">Message</label>
+          <textarea
+            id="support-message"
+            name="message"
+            rows="1"
+            required
+            placeholder="Text a message…"
+            data-error="support-message-error"
+          ></textarea>
+          <div id="support-message-error" class="error-msg">
+            <span role="img" aria-label="Error">!</span> Please type a message.
+          </div>
+        </div>
+        <button
+          type="submit"
+          class="support-send-btn"
+          id="support-submit-btn"
+          aria-label="Send message"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M22 2 11 13" />
+            <path d="M22 2 15 22l-4-9-9-4z" />
+          </svg>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script type="module">
+    if (!Object.hasOwn(HTMLElement.prototype, 'popover')) {
+      import('https://unpkg.com/@oddbird/popover-polyfill@latest/dist/popover.min.js');
+    }
+    if (!('commandForElement' in HTMLButtonElement.prototype)) {
+      import('https://esm.run/invokers-polyfill');
+    }
+  </script>
 </body>
 </html>

@@ -291,6 +291,248 @@
   }
 
   // ---------------------------------------------------------------------------
+  // 4b. Floating Quick-Support Popover
+  // ---------------------------------------------------------------------------
+  const supportFab = document.getElementById('support-fab');
+  const supportPopover = document.getElementById('support-popover');
+  const supportCloseBtn = document.getElementById('support-close-btn');
+  const supportThread = document.getElementById('support-thread');
+  const supportForm = document.getElementById('support-form');
+  const supportMessageEl = document.getElementById('support-message');
+  const renderedMsgIds = new Set();
+
+  const appendDmBubble = (text, meta, kind = 'in', id = null) => {
+    if (!supportThread) return;
+    if (id && renderedMsgIds.has(id)) return;
+    if (id) renderedMsgIds.add(id);
+
+    const bubble = document.createElement('div');
+    bubble.className = `dm-bubble dm-bubble-${kind}`;
+    const p = document.createElement('p');
+    p.textContent = text;
+    const span = document.createElement('span');
+    span.className = 'dm-time';
+    span.textContent = meta;
+    bubble.append(p, span);
+    supportThread.append(bubble);
+    supportThread.scrollTop = supportThread.scrollHeight;
+  };
+
+  if (supportPopover) {
+    let supportsDisplayTransition;
+    const canTransitionDisplay = () => {
+      if (supportsDisplayTransition !== undefined) return supportsDisplayTransition;
+      if (!window.CSS?.supports?.('transition-behavior', 'allow-discrete') || !document.body) {
+        return false;
+      }
+      const probe = document.createElement('div');
+      probe.style.cssText = 'transition: display 1s allow-discrete !important; display: block;';
+      document.body.appendChild(probe);
+      getComputedStyle(probe).display;
+      probe.style.display = 'none';
+      supportsDisplayTransition = getComputedStyle(probe).display === 'block';
+      probe.remove();
+      return supportsDisplayTransition;
+    };
+
+    const supportsTopLayerExit = () =>
+      window.CSS?.supports?.('overlay', 'auto') && canTransitionDisplay();
+
+    const closeSupportPopover = async () => {
+      if (!supportsTopLayerExit()) {
+        supportPopover.setAttribute('data-closing', '');
+        const animations = supportPopover.getAnimations({ subtree: true });
+        if (animations.length > 0) {
+          await Promise.race([
+            Promise.allSettled(animations.map((a) => a.finished)),
+            new Promise((r) => setTimeout(r, 500))
+          ]);
+        }
+        if (!supportPopover.hasAttribute('data-closing')) return;
+        supportPopover.removeAttribute('data-closing');
+      }
+      supportPopover.hidePopover?.();
+      supportFab?.focus();
+    };
+
+    supportCloseBtn?.addEventListener('click', (e) => {
+      if (!supportsTopLayerExit()) {
+        e.preventDefault();
+        closeSupportPopover();
+      }
+    });
+
+    let pollTimer = null;
+
+    const getSupportSessionId = () => {
+      let id = localStorage.getItem('dg_support_session');
+      if (!id || !/^SUP-[A-Z0-9]{4,12}$/i.test(id)) {
+        id = `SUP-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+        localStorage.setItem('dg_support_session', id);
+      }
+      return id;
+    };
+
+    const syncSupportMessages = async () => {
+      try {
+        const sessionId = getSupportSessionId();
+        const res = await fetch(`/api/support?sessionId=${encodeURIComponent(sessionId)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.ok || !Array.isArray(data.messages)) return;
+        for (const m of data.messages) {
+          const kind = m.sender === 'visitor' ? 'out' : 'in';
+          const label = m.sender === 'visitor' ? `You · ${m.time}` : `Support Desk · ${m.time}`;
+          appendDmBubble(m.text, label, kind, m.id);
+        }
+      } catch {
+        // Ignore transient poll errors
+      }
+    };
+
+    const startPolling = () => {
+      syncSupportMessages();
+      if (!pollTimer) {
+        pollTimer = setInterval(syncSupportMessages, 2500);
+      }
+    };
+
+    const stopPolling = () => {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    };
+
+    supportPopover.addEventListener('toggle', (e) => {
+      const isOpen = e.newState === 'open';
+      supportFab?.setAttribute('aria-expanded', String(isOpen));
+      if (isOpen) {
+        supportPopover.removeAttribute('data-closing');
+        startPolling();
+        supportMessageEl?.focus();
+      } else {
+        stopPolling();
+        if (supportPopover.contains(document.activeElement)) {
+          supportFab?.focus();
+        }
+      }
+    });
+  }
+
+  if (supportForm) {
+    const supportsUserInvalid = CSS.supports('selector(:user-invalid)');
+    const supportDirty = new WeakMap();
+
+    const syncSupportField = (el, forceCheck = false) => {
+      if (!el.matches?.('input, textarea')) return;
+      const invalid = supportsUserInvalid
+        ? el.matches(':user-invalid')
+        : forceCheck && !el.validity.valid;
+
+      if (!supportsUserInvalid && forceCheck) {
+        el.classList.toggle('user-invalid-fallback', invalid);
+        el.classList.toggle('user-valid-fallback', !invalid);
+      }
+
+      el.setAttribute('aria-invalid', invalid ? 'true' : 'false');
+      const errorId = el.dataset.error;
+      if (errorId) {
+        const ids = (el.getAttribute('aria-describedby') || '')
+          .split(/\s+/)
+          .filter((id) => id && id !== errorId);
+        if (invalid) ids.push(errorId);
+        if (ids.length) el.setAttribute('aria-describedby', ids.join(' '));
+        else el.removeAttribute('aria-describedby');
+      }
+    };
+
+    supportForm.querySelectorAll('textarea').forEach((el) => syncSupportField(el));
+
+    supportForm.addEventListener('blur', (e) => {
+      const state = supportDirty.get(e.target) || { hasInteracted: false, hasBlurred: false };
+      state.hasBlurred = true;
+      supportDirty.set(e.target, state);
+      syncSupportField(e.target, state.hasInteracted);
+    }, true);
+
+    supportForm.addEventListener('input', (e) => {
+      const state = supportDirty.get(e.target) || { hasInteracted: false, hasBlurred: false };
+      state.hasInteracted = true;
+      supportDirty.set(e.target, state);
+      if (e.target.hasAttribute('aria-invalid')) {
+        syncSupportField(e.target, state.hasBlurred);
+      }
+    });
+
+    supportMessageEl?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        supportForm.requestSubmit();
+      }
+    });
+
+    supportForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (supportMessageEl && !supportMessageEl.value.trim()) {
+        supportDirty.set(supportMessageEl, { hasInteracted: true, hasBlurred: true });
+        supportMessageEl.classList.add('user-invalid-fallback');
+        syncSupportField(supportMessageEl, true);
+        supportMessageEl.focus();
+        return;
+      }
+
+      const submitBtn = document.getElementById('support-submit-btn');
+      if (submitBtn) submitBtn.disabled = true;
+
+      const message = String(supportMessageEl?.value || '').trim();
+      const sessionId = (() => {
+        let id = localStorage.getItem('dg_support_session');
+        if (!id || !/^SUP-[A-Z0-9]{4,12}$/i.test(id)) {
+          id = `SUP-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+          localStorage.setItem('dg_support_session', id);
+        }
+        return id;
+      })();
+
+      if (supportMessageEl) {
+        supportMessageEl.value = '';
+        supportDirty.delete(supportMessageEl);
+        supportMessageEl.classList.remove('user-invalid-fallback', 'user-valid-fallback');
+        syncSupportField(supportMessageEl);
+      }
+
+      try {
+        const res = await fetch('/api/support', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            message,
+            page: window.location.pathname + window.location.hash
+          })
+        });
+        const result = await res.json();
+        if (!res.ok || !result.ok) {
+          throw new Error(result.error || 'Unable to send support message.');
+        }
+
+        if (Array.isArray(result.messages)) {
+          const latest = result.messages[result.messages.length - 1];
+          if (latest) {
+            appendDmBubble(latest.text, `You · ${latest.time}`, 'out', latest.id);
+          }
+        }
+      } catch (err) {
+        appendDmBubble(`Failed to send: ${err.message}`, 'Support Desk', 'error');
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+        supportMessageEl?.focus();
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------------------
   // 5. Visitor Notification (once per session once relayed, rich telemetry)
   // ---------------------------------------------------------------------------
   if (!sessionStorage.getItem('dg_visit_notified')) {

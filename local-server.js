@@ -3,7 +3,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const { handleVisit, handleInquiry } = require('./lib/telegram');
+const { handleVisit, handleInquiry, handleSupport, handleSupportMessages } = require('./lib/telegram');
 
 // Load .env if present (zero-dependency)
 const envPath = path.join(__dirname, '.env');
@@ -54,6 +54,22 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && urlPath === '/api/inquiry') {
     try {
       return sendJson(res, 200, await handleInquiry(req));
+    } catch (err) {
+      return sendJson(res, err.statusCode || 500, { ok: false, error: err.message });
+    }
+  }
+
+  if (req.method === 'GET' && urlPath === '/api/support') {
+    try {
+      return sendJson(res, 200, await handleSupportMessages(req));
+    } catch (err) {
+      return sendJson(res, err.statusCode || 500, { ok: false, error: err.message });
+    }
+  }
+
+  if (req.method === 'POST' && urlPath === '/api/support') {
+    try {
+      return sendJson(res, 200, await handleSupport(req));
     } catch (err) {
       return sendJson(res, err.statusCode || 500, { ok: false, error: err.message });
     }
