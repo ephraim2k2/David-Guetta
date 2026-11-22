@@ -1,0 +1,12 @@
+{
+  "name": "guetta-management",
+  "version": "1.0.0",
+  "private": true,
+  "description": "David Guetta Official Management & Global Representation",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

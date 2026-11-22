@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/server.js", "destination": "/404" },
+    { "source": "/lib/(.*)", "destination": "/404" }
+  ]
+}
