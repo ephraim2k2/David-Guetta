@@ -72,8 +72,21 @@
   const openEpkButtons = [
     document.getElementById('open-epk-btn'),
     document.getElementById('hero-epk-btn'),
-    document.getElementById('footer-epk-btn')
+    document.getElementById('footer-epk-btn'),
+    document.getElementById('mobile-epk-btn')
   ].filter(Boolean);
+
+  // Close mobile popover when a nav link inside it is clicked
+  const mobileNav = document.getElementById('mobile-nav');
+  if (mobileNav) {
+    mobileNav.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        if (mobileNav.matches(':popover-open')) {
+          mobileNav.hidePopover();
+        }
+      });
+    });
+  }
   const closeEpkBtn = document.getElementById('close-epk-btn');
 
   if (epkDialog) {

@@ -180,12 +180,33 @@
       </nav>
 
       <div class="header-actions">
-        <button type="button" class="btn btn-outline btn-sm" id="open-epk-btn">
+        <button type="button" class="btn btn-outline btn-sm header-epk-btn" id="open-epk-btn">
           Press &amp; Rider
         </button>
         <a href="#inquiries" class="btn btn-primary btn-sm">Direct Desk</a>
+        <button type="button" class="btn btn-outline btn-sm mobile-menu-btn" popovertarget="mobile-nav" aria-label="Open navigation menu">
+          Menu
+        </button>
       </div>
     </div>
+
+    <nav id="mobile-nav" popover="auto" class="mobile-nav-popover" aria-label="Mobile navigation">
+      <div class="mobile-nav-header">
+        <span class="mono-label">Navigation</span>
+        <button type="button" class="dialog-close-btn" popovertarget="mobile-nav" popovertargetaction="hide" aria-label="Close navigation menu">✕</button>
+      </div>
+      <ul class="mobile-nav-list">
+        <li><a href="#scope">01 — Representation</a></li>
+        <li><a href="#touring">02 — Routing &amp; Residencies</a></li>
+        <li><a href="#partnerships">03 — Partnerships</a></li>
+        <li><a href="#meet-greet">04 — Meet &amp; Greet</a></li>
+        <li><a href="#directory">05 — Directory</a></li>
+        <li><a href="#inquiries">06 — Inquiries</a></li>
+      </ul>
+      <button type="button" class="btn btn-outline mobile-epk-trigger" id="mobile-epk-btn" popovertarget="mobile-nav" popovertargetaction="hide">
+        Press Kit &amp; Technical Rider
+      </button>
+    </nav>
   </header>
 
   <main id="main-content">
